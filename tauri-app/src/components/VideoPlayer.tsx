@@ -24,6 +24,7 @@ export default function VideoPlayer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<ReturnType<ReturnType<typeof MediaPlayer>["create"]> | null>(null);
+  const [copyState, setCopyState] = useState<"idle" | "success" | "error">("idle");
 
   useEffect(() => {
     if (!videoId) return;
@@ -143,23 +144,24 @@ export default function VideoPlayer() {
 
   const handleShare = useCallback(async () => {
     if (!videoId) return;
-
+  
     let url = `https://www.youtube.com/watch?v=${videoId}`;
-
-    // stretch goal: timestamp
+  
     if (videoRef.current) {
       const seconds = Math.floor(videoRef.current.currentTime);
       if (seconds > 0) {
         url += `&t=${seconds}s`;
       }
     }
-
+  
     try {
       await navigator.clipboard.writeText(url);
-      console.log("Copied to clipboard");
+      setCopyState("success");
     } catch (err) {
       console.error("Copy failed", err);
+      setCopyState("error");
     }
+    setTimeout(() => setCopyState("idle"), 2000);
   }, [videoId]);
 
   if (error) {
@@ -256,10 +258,20 @@ export default function VideoPlayer() {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="btn btn-outline btn-sm"
+                className={`btn btn-sm ${
+                  copyState === "success"
+                    ? "btn-success"
+                    : copyState === "error"
+                    ? "btn-error"
+                    : "btn-outline"
+                }`}
                 onClick={handleShare}
               >
-                Share
+                {copyState === "success"
+                  ? "Copied!"
+                  : copyState === "error"
+                  ? "Failed"
+                  : "Share"}
               </button>
 
               <button
@@ -267,7 +279,7 @@ export default function VideoPlayer() {
                 onClick={toggleSubscribe}
               >
                 {isSubscribed ? "Unsubscribe" : "Subscribe"}
-            </button>
+              </button>
             </div>
           </div>
           <div className="divider my-1" />
