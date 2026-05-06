@@ -25,6 +25,7 @@ export default function VideoPlayer() {
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<ReturnType<ReturnType<typeof MediaPlayer>["create"]> | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "success" | "error">("idle");
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!videoId) return;
@@ -144,9 +145,7 @@ export default function VideoPlayer() {
 
   const handleShare = useCallback(async () => {
     if (!videoId) return;
-  
     let url = `https://www.youtube.com/watch?v=${videoId}`;
-  
     if (videoRef.current) {
       const seconds = Math.floor(videoRef.current.currentTime);
       if (seconds > 0) {
@@ -161,7 +160,15 @@ export default function VideoPlayer() {
       console.error("Copy failed", err);
       setCopyState("error");
     }
-    setTimeout(() => setCopyState("idle"), 2000);
+ 
+    if (copyTimeoutRef.current) {
+      clearTimeout(copyTimeoutRef.current);
+    }
+  
+    copyTimeoutRef.current = setTimeout(() => {
+      setCopyState("idle");
+      copyTimeoutRef.current = null;
+    }, 2000);
   }, [videoId]);
 
   if (error) {
