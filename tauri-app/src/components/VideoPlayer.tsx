@@ -141,6 +141,27 @@ export default function VideoPlayer() {
     }
   }, [details, isSubscribed, userId]);
 
+  const handleShare = useCallback(async () => {
+    if (!videoId) return;
+
+    let url = `https://www.youtube.com/watch?v=${videoId}`;
+
+    // stretch goal: timestamp
+    if (videoRef.current) {
+      const seconds = Math.floor(videoRef.current.currentTime);
+      if (seconds > 0) {
+        url += `&t=${seconds}s`;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      console.log("Copied to clipboard");
+    } catch (err) {
+      console.error("Copy failed", err);
+    }
+  }, [videoId]);
+
   if (error) {
     return (
       <div className="hero min-h-[60vh]">
@@ -233,12 +254,21 @@ export default function VideoPlayer() {
                 </p>
               </div>
             </div>
-            <button
-              className={`btn ${isSubscribed ? "btn-error btn-outline" : "btn-primary"}`}
-              onClick={toggleSubscribe}
-            >
-              {isSubscribed ? "Unsubscribe" : "Subscribe"}
+            <div className="flex items-center gap-2">
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={handleShare}
+              >
+                Share
+              </button>
+
+              <button
+                className={`btn ${isSubscribed ? "btn-error btn-outline" : "btn-primary"}`}
+                onClick={toggleSubscribe}
+              >
+                {isSubscribed ? "Unsubscribe" : "Subscribe"}
             </button>
+            </div>
           </div>
           <div className="divider my-1" />
           <p className="text-sm opacity-60 whitespace-pre-wrap max-h-48 overflow-y-auto">
